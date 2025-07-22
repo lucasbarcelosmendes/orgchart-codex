@@ -1450,6 +1450,23 @@ function updateOrgChartWithNewLevel() {
         .parentId(d => d["Reports to"])(adjustedData);
 
     adjustedData = assignLevelsBasedOnDepth(adjustedData, tempRoot);
+
+    // Preserve the level before adjustments for sorting
+    adjustedData.forEach(node => {
+        node.originalLevel = node.Level;
+    });
+
+    adjustedData = adjustLevels(adjustedData);
+
+    // Keep nodes ordered by their original level and position
+    adjustedData.sort((a, b) => {
+        const levelComparison = parseInt(a.originalLevel, 10) - parseInt(b.originalLevel, 10);
+        if (levelComparison !== 0) {
+            return levelComparison;
+        }
+        return a.Position.localeCompare(b.Position);
+    });
+
     adjustedData = adjustLevels(adjustedData);
     adjustedData = addWrapperNodes(adjustedData, maxNodesPerRow);
     adjustedData = createInvisibleNodes(adjustedData);
