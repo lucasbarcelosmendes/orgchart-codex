@@ -1420,36 +1420,14 @@ document.getElementById("more-granular").addEventListener("click", () => {
     restoreOriginalView();
     if (maxLevel < 20) { // Define an upper limit if necessary
         maxLevel++;
-        /*if (isUsingExcel && lastUploadedFile) {
-            processExcelFile(lastUploadedFile); // Reload from last uploaded file
-        } else {
-            loadFile(); // Reload from Airtable
-        }
-        */
-        if (isFilterEmployeeActive){
-            filterAmbatovyEmployees();
-        }
-        else{
-            reloadFullOrgChart();
-        }     
+        updateOrgChartWithNewLevel();
     }
 });
 
 document.getElementById("less-granular").addEventListener("click", () => {
     if (maxLevel > 6) { // Define a lower limit if necessary
         maxLevel--;
-        /*if (isUsingExcel && lastUploadedFile) {
-            processExcelFile(lastUploadedFile); // Reload from last uploaded file
-        } else {
-            loadFile(); // Reload from Airtable
-        }
-        */
-        if (isFilterEmployeeActive){
-            filterAmbatovyEmployees();
-        }
-        else{
-            reloadFullOrgChart();
-        }     
+        updateOrgChartWithNewLevel();
     }
 });
 
