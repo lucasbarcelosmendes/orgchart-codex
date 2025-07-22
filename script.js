@@ -1450,7 +1450,6 @@ function updateOrgChartWithNewLevel() {
         .parentId(d => d["Reports to"])(adjustedData);
 
     adjustedData = assignLevelsBasedOnDepth(adjustedData, tempRoot);
-
     // Preserve the level before adjustments for sorting
     adjustedData.forEach(node => {
         node.originalLevel = node.Level;
