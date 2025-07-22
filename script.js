@@ -735,6 +735,8 @@ function filterAmbatovyEmployees() {
                 node.Level = parseInt(node.Level) || 0;
             });
 
+            originalData = JSON.parse(JSON.stringify(jsonData));
+
             const rootNode = d3.stratify()
                 .id(d => d.ID)
                 .parentId(d => d["Reports to"])(jsonData);
@@ -795,6 +797,8 @@ function reloadFullOrgChart() {
             jsonData.forEach(node => {
                 node.Level = parseInt(node.Level) || 0;
             });
+
+            originalData = JSON.parse(JSON.stringify(jsonData));
 
             const rootNode = d3.stratify()
                 .id(d => d.ID)
@@ -872,6 +876,8 @@ async function processExcelFile(file, filterEmployees = false) {
         jsonData.forEach(node => {
             node.Level = parseInt(node.Level) || 0;
         });
+
+        originalData = JSON.parse(JSON.stringify(jsonData));
 
         const rootNode = d3.stratify()
             .id(d => d.ID)
@@ -966,7 +972,7 @@ async function loadFile() {
             if (levelComparison !== 0) {
                 return levelComparison; // First criterion: originalLevel
             }
-        
+
             // Second criterion: Position
             return a.Position.localeCompare(b.Position);
         });
@@ -1420,47 +1426,46 @@ document.getElementById("more-granular").addEventListener("click", () => {
     restoreOriginalView();
     if (maxLevel < 20) { // Define an upper limit if necessary
         maxLevel++;
-        /*if (isUsingExcel && lastUploadedFile) {
-            processExcelFile(lastUploadedFile); // Reload from last uploaded file
-        } else {
-            loadFile(); // Reload from Airtable
-        }
-        */
-        if (isFilterEmployeeActive){
-            filterAmbatovyEmployees();
-        }
-        else{
-            reloadFullOrgChart();
-        }     
+        updateOrgChartWithNewLevel();
     }
 });
 
 document.getElementById("less-granular").addEventListener("click", () => {
     if (maxLevel > 6) { // Define a lower limit if necessary
         maxLevel--;
-        /*if (isUsingExcel && lastUploadedFile) {
-            processExcelFile(lastUploadedFile); // Reload from last uploaded file
-        } else {
-            loadFile(); // Reload from Airtable
-        }
-        */
-        if (isFilterEmployeeActive){
-            filterAmbatovyEmployees();
-        }
-        else{
-            reloadFullOrgChart();
-        }     
+        updateOrgChartWithNewLevel();
     }
 });
 
 function updateOrgChartWithNewLevel() {
-    if (!allData || allData.length === 0) {
+    if (!originalData || originalData.length === 0) {
         console.warn("No org chart data available to update.");
         return;
     }
 
-    // Update levels while keeping the same dataset
-    let adjustedData = adjustLevels(allData);
+    let adjustedData = JSON.parse(JSON.stringify(originalData));
+
+    const tempRoot = d3.stratify()
+        .id(d => d.ID)
+        .parentId(d => d["Reports to"])(adjustedData);
+
+    adjustedData = assignLevelsBasedOnDepth(adjustedData, tempRoot);
+
+    // Preserve the level before adjustments for sorting
+    adjustedData.forEach(node => {
+        node.originalLevel = node.Level;
+    });
+
+    adjustedData = adjustLevels(adjustedData);
+
+    // Keep nodes ordered by their original level and position
+    adjustedData.sort((a, b) => {
+        const levelComparison = parseInt(a.originalLevel, 10) - parseInt(b.originalLevel, 10);
+        if (levelComparison !== 0) {
+            return levelComparison;
+        }
+        return a.Position.localeCompare(b.Position);
+    });
     adjustedData = addWrapperNodes(adjustedData, maxNodesPerRow);
     adjustedData = createInvisibleNodes(adjustedData);
 
